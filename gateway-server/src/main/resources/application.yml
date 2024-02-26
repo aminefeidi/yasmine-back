@@ -1,0 +1,128 @@
+server:
+  port: 9000
+
+app:
+  prefix: /api/v1
+  client-id: webapp
+  client-secret: Wsvj1KhNklkx6n1XhObANNgMzrUzcQh4
+  keycloak-issuer: http://localhost:9003/realms/planning-poker
+  openapi:
+    project-title: @project.name@
+    project-version: @project.version@
+    project-description: @project.description@
+    gateway-address: 'http://localhost:9000'
+    token-url: ${app.keycloak-issuer}/protocol/openid-connect/token
+
+spring:
+  application:
+    name: gateway-server
+
+  # Security
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${app.keycloak-issuer}
+
+
+
+  cloud:
+    gateway:
+      default-filters:
+        - DedupeResponseHeader=Access-Control-Allow-Origin Access-Control-Allow-Credentials, RETAIN_UNIQUE
+        - TokenRelay
+      discovery:
+        locator:
+          enabled: true
+      routes:
+        - id: cards-service
+          uri: lb://CARDS-SERVICE
+          predicates:
+            - Path=${app.prefix}/cards/** , /doc/cards/v3/api-docs
+
+        - id: chat-service
+          uri: lb://CHAT-SERVICE
+          predicates:
+            - Path=${app.prefix}/chat/** , /doc/chat/v3/api-docs
+
+        - id: project-service
+          uri: lb://PROJECT-SERVICE
+          predicates:
+            - Path=${app.prefix}/project/** , /doc/project/v3/api-docs
+
+        - id: session-service
+          uri: lb://SESSION-SERVICE
+          predicates:
+            - Path=${app.prefix}/session/** , /doc/session/v3/api-docs
+
+        - id: estimation-service
+          uri: lb://ESTIMATION-SERVICE
+          predicates:
+            - Path=${app.prefix}/estimation/** , /doc/estimation/v3/api-docs
+
+        - id: user-story-service
+          uri: lb://USER-STORY-SERVICE
+          predicates:
+            - Path=${app.prefix}/user-story/** , /doc/user-story/v3/api-docs
+
+        - id: test-service
+          uri: lb://TEST-SERVICE
+          predicates:
+            - Path=${app.prefix}/test/** , /doc/test/v3/api-docs
+
+        - id: openapi
+          uri: http://localhost:${server.port}
+          predicates:
+            - Path=/v3/api-docs/**
+          filters:
+            - RewritePath=/v3/api-docs(?<path>.*), /doc/$\{path}/v3/api-docs
+
+
+springdoc:
+  swagger-ui:
+    oauth:
+      client-id: ${app.client-id}
+      client-secret: ${app.client-secret}
+    urls:
+      - name: cards
+        url: /v3/api-docs/cards
+
+      - name: chat
+        url: /v3/api-docs/chat
+
+      - name: project
+        url: /v3/api-docs/project
+
+      - name: session
+        url: /v3/api-docs/session
+
+      - name: estimation
+        url: /v3/api-docs/estimation
+
+      - name: user-story
+        url: /v3/api-docs/user-story
+
+      - name: test
+        url: /v3/api-docs/test
+
+# Eureka
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: http://localhost:9002/eureka/
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  info:
+    env:
+      enabled: true
+  endpoint:
+    gateway:
+      enabled: true
+
+logging:
+  level:
+    org.springframework.cloud.gateway.handler.RoutePredicateHandlerMapping: trace

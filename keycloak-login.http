@@ -1,0 +1,12 @@
+### Login to keycloak an generate token
+POST http://localhost:9003/realms/planning-poker/protocol/openid-connect/token
+Content-Type: application/x-www-form-urlencoded
+
+grant_type = password &
+client_id = webapp &
+username = admin@planning.com &
+password = adminuser
+
+
+###
+GET http://localhost:9003

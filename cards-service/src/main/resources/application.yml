@@ -1,0 +1,61 @@
+server:
+  port: 9006
+
+app:
+  name: cards
+  client-id: webapp
+  client-secret: Wsvj1KhNklkx6n1XhObANNgMzrUzcQh4
+  keycloak-issuer: http://localhost:9003/realms/planning-poker
+  openapi:
+    project-title: @project.name@
+    project-version: @project.version@
+    project-description: @project.description@
+    gateway-address: 'http://localhost:9000'
+    token-url: ${app.keycloak-issuer}/protocol/openid-connect/token
+
+
+spring:
+  application:
+    name: ${app.name}-service
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${app.keycloak-issuer}
+          jwk-set-uri: ${app.keycloak-issuer}/protocol/openid-connect/certs
+  jpa:
+    database: postgresql
+    show-sql: true
+    hibernate:
+      ddl-auto: update
+  datasource:
+    url: jdbc:postgresql://localhost:5434/cards
+    username: appdb
+    password: appdb
+
+# Eureka
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: http://localhost:9002/eureka/
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  info:
+    env:
+      enabled: true
+  endpoint:
+    gateway:
+      enabled: true
+
+springdoc:
+  api-docs:
+    path: /doc/${app.name}/v3/api-docs
+  swagger-ui:
+    oauth:
+      client-id: ${app.client-id}
+      client-secret: ${app.client-secret}
+      scopes: openid
